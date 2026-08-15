@@ -25,3 +25,11 @@ def test_recon_discovers_workspace_files(tmp_path: Path):
     assert "README.md" in snapshot.filesystem
     assert "tests/test_app.py" in snapshot.filesystem
 
+def test_recon_discovers_processes():
+    snapshot = ReconEngine().inspect()
+
+    assert len(snapshot.processes) > 0
+
+    for process in snapshot.processes:
+        assert process.pid > 0
+        assert process.name

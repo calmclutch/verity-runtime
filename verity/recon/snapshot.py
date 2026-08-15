@@ -7,8 +7,13 @@ class EnvironmentInfo(BaseModel):
     python_version: str
 
 
+class ProcessInfo(BaseModel):
+    pid: int
+    name: str
+
+
 class ReconSnapshot(BaseModel):
     environment: EnvironmentInfo
     tools: list[str] = Field(default_factory=list)
     filesystem: list[str] = Field(default_factory=list)
-    
+    processes: list[ProcessInfo] = Field(default_factory=list)

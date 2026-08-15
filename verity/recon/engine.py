@@ -3,11 +3,13 @@ import shutil
 import sys
 from pathlib import Path
 
-from .snapshot import EnvironmentInfo, ReconSnapshot
+import psutil
+
+from .snapshot import EnvironmentInfo, ProcessInfo, ReconSnapshot
 
 
 class ReconEngine:
-    def __init__(self, workspace: Path | None = None):
+    def __init__(self, workspace=None):
         self.workspace = workspace or Path.cwd()
 
     def inspect(self) -> ReconSnapshot:
@@ -19,11 +21,13 @@ class ReconEngine:
 
         tools = self._discover_tools()
         filesystem = self._discover_filesystem()
+        processes = self._discover_processes()
 
         return ReconSnapshot(
             environment=environment,
             tools=tools,
             filesystem=filesystem,
+            processes=processes,
         )
 
     def _discover_tools(self) -> list[str]:
@@ -47,5 +51,24 @@ class ReconEngine:
         return sorted(
             path.relative_to(self.workspace).as_posix()
             for path in self.workspace.rglob("*")
-             if path.is_file()
+            if path.is_file()
         )
+
+    def _discover_processes(self) -> list[ProcessInfo]:
+        processes = []
+
+        for process in psutil.process_iter(["pid", "name"]):
+            try:
+                info = process.info
+
+                if info["pid"] > 0 and info["name"]:
+                    processes.append(
+                        ProcessInfo(
+                            pid=info["pid"],
+                            name=info["name"],
+                        )
+                    )
+            except (psutil.NoSuchProcess, psutil.AccessDenied):
+                continue
+
+        return sorted(processes, key=lambda process: process.pid)

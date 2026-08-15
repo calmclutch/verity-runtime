@@ -9,6 +9,7 @@ description = "Intent-aware execution runtime for autonomous agents"
 requires-python = ">=3.11"
 dependencies = [
     "pydantic>=2.0",
+    "psutil>=6.0",
 ]
 
 [project.optional-dependencies]
