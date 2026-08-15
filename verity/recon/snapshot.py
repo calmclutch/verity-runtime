@@ -1,0 +1,14 @@
+from pydantic import BaseModel, Field
+
+
+class EnvironmentInfo(BaseModel):
+    operating_system: str
+    architecture: str
+    python_version: str
+
+
+class ReconSnapshot(BaseModel):
+    environment: EnvironmentInfo
+    tools: list[str] = Field(default_factory=list)
+    filesystem: list[str] = Field(default_factory=list)
+    
