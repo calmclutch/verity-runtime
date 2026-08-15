@@ -1,11 +1,17 @@
 import platform
+import socket
 import shutil
 import sys
 from pathlib import Path
 
 import psutil
 
-from .snapshot import EnvironmentInfo, ProcessInfo, ReconSnapshot
+from .snapshot import (
+    EnvironmentInfo,
+    NetworkInterfaceInfo,
+    ProcessInfo,
+    ReconSnapshot,
+)
 
 
 class ReconEngine:
@@ -22,12 +28,14 @@ class ReconEngine:
         tools = self._discover_tools()
         filesystem = self._discover_filesystem()
         processes = self._discover_processes()
+        network_interfaces = self._discover_network_interfaces()
 
         return ReconSnapshot(
             environment=environment,
             tools=tools,
             filesystem=filesystem,
             processes=processes,
+            network_interfaces=network_interfaces,
         )
 
     def _discover_tools(self) -> list[str]:
@@ -72,3 +80,22 @@ class ReconEngine:
                 continue
 
         return sorted(processes, key=lambda process: process.pid)
+
+    def _discover_network_interfaces(self) -> list[NetworkInterfaceInfo]:
+        interfaces = []
+
+        for name, addresses in psutil.net_if_addrs().items():
+            ip_addresses = [
+                address.address
+                for address in addresses
+                if address.family in (socket.AF_INET, socket.AF_INET6)
+            ]
+
+            interfaces.append(
+                NetworkInterfaceInfo(
+                    name=name,
+                    addresses=ip_addresses,
+                )
+            )
+
+        return sorted(interfaces, key=lambda interface: interface.name)
